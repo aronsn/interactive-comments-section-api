@@ -1,0 +1,29 @@
+{
+  "name": "interactive-comments-section-api",
+  "version": "1.0.0",
+  "description": "rest-api",
+  "main": "server.js",
+  "scripts": {
+    "npm run dev": "npx nodemon --env-file=config.env server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aronsn/interactive-comments-section-api.git"
+  },
+  "author": "Aron Snekkestad",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aronsn/interactive-comments-section-api/issues"
+  },
+  "homepage": "https://github.com/aronsn/interactive-comments-section-api#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.5.0"
+  },
+  "type": "module",
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
