@@ -4,7 +4,7 @@
   "description": "rest-api",
   "main": "server.js",
   "scripts": {
-    "npm run dev": "npx nodemon --env-file=config.env server.js",
+    "dev": "npx nodemon --env-file=config.env server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
