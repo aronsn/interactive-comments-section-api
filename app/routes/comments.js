@@ -14,6 +14,4 @@ router.route("/reply")
     .patch(patchReply)
     .delete(deleteReply)
 
-// TODO - patch route
-
 export default router;
