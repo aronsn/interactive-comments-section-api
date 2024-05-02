@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { allComments, createComment, createReply, removeComment, removeReply } from "../services/comments.js";
+import { allComments, createComment, createReply, removeComment, removeReply, updateComment, updateReply } from "../services/comments.js";
 
 export const getComments = async (req, res) => {
     try {
@@ -60,6 +60,26 @@ export const postReply = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send("Error adding reply");
+    }
+}
+
+export const patchComment = async (req, res) => {
+    try {
+        let result = await updateComment(req.body.id, req.body.newContent);
+        res.send(result).status(200);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error updating comment");
+    }
+}
+
+export const patchReply = async (req, res) => {
+    try {
+        let result = await updateReply(req.body.id, req.body.newContent);
+        res.send(result).status(200);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error updating reply");
     }
 }
 

@@ -31,6 +31,32 @@ export const createReply = async (document) => {
 
 }
 
+export const updateComment = async (targetId, newContent) => {
+    const query = { _id: new ObjectId(targetId) };
+    const updates = {
+        $set: {
+            content: newContent
+        },
+    };
+
+    let collection = await db.collection("comments");
+    let result = await collection.updateOne(query, updates);
+    return result;
+}
+
+export const updateReply = async (targetId, newContent) => {
+    const query = { _id: new ObjectId(targetId) };
+    const updates = {
+        $set: {
+            content: newContent
+        },
+    };
+
+    let collection = await db.collection("replies");
+    let result = await collection.updateOne(query, updates);
+    return result;
+}
+
 export const removeComment = async (targetId) => {
     let collection = await db.collection("comments");
     let result = collection.deleteOne({ _id: new ObjectId(targetId) });
