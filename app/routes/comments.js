@@ -1,16 +1,16 @@
 import express from "express";
-import { getAllComments, postCreateReply, postCreateComment, deleteRemoveReply } from "../controllers/comments.js";
+import { getComments, postComment, postReply, deleteComment, deleteReply } from "../controllers/comments.js";
 
 const router = express.Router();
 
 router.route("/")
-    .get(getAllComments)
-    .post(postCreateComment)
-    .delete(() => { })
+    .get(getComments)
+    .post(postComment)
+    .delete(deleteComment)
 
 router.route("/reply")
-    .post(postCreateReply)
-    .delete(deleteRemoveReply)
+    .post(postReply)
+    .delete(deleteReply)
 
 // TODO - delete route, patch route
 

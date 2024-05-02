@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
-import { allComments, createComment, createReply, deleteReply } from "../services/comments.js";
+import { allComments, createComment, createReply, removeComment, removeReply } from "../services/comments.js";
 
-export const getAllComments = async (req, res) => {
+export const getComments = async (req, res) => {
     try {
         const results = await allComments();
         res.send(results).status(200);
@@ -11,7 +11,7 @@ export const getAllComments = async (req, res) => {
     }
 }
 
-export const postCreateComment = async (req, res) => {
+export const postComment = async (req, res) => {
     try {
         let newDocument = {
             _id: new ObjectId(),
@@ -37,7 +37,7 @@ export const postCreateComment = async (req, res) => {
     }
 }
 
-export const postCreateReply = async (req, res) => {
+export const postReply = async (req, res) => {
     try {
         let newDocument = {
             _id: new ObjectId(),
@@ -63,9 +63,20 @@ export const postCreateReply = async (req, res) => {
     }
 }
 
-export const deleteRemoveReply = async (req, res) => {
+export const deleteComment = async (req, res) => {
     try {
-        const result = await deleteReply(req.body.targetId)
+        const result = await removeComment(req.body.targetId)
+        res.send(result).status(204);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error deleting comment");
+    }
+}
+
+export const deleteReply = async (req, res) => {
+    try {
+        const result = await removeReply(req.body.targetId)
         res.send(result).status(204);
 
     } catch (error) {

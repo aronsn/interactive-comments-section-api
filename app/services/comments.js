@@ -31,13 +31,14 @@ export const createReply = async (document) => {
 
 }
 
-export const deleteComment = async () => {
-
+export const removeComment = async (targetId) => {
+    let collection = await db.collection("comments");
+    let result = collection.deleteOne({ _id: new ObjectId(targetId) });
+    return result;
 }
 
-export const deleteReply = async (targetId) => {
+export const removeReply = async (targetId) => {
     let collection = await db.collection("replies");
     let result = collection.deleteOne({ _id: new ObjectId(targetId) });
-
     return result;
 }
