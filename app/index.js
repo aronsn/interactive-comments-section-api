@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import comments from "./routes/comments.js";
+import comments from "./comments/routes.js";
 
 const app = express();
 
