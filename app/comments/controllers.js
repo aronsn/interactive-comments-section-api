@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { allComments, createComment, createReply, removeComment, removeReply, updateComment, updateReply } from "./services.js";
 
-export const getCommentsRequest = async (request, response) => {
+export const GETCommentsRequest = async (request, response) => {
     try {
         const results = await allComments();
         return response.status(200).send(results);
@@ -11,7 +11,7 @@ export const getCommentsRequest = async (request, response) => {
     }
 }
 
-export const postCommentRequest = async (request, response) => {
+export const POSTCommentRequest = async (request, response) => {
     try {
         if (!request.headers['content-type'] && request.headers['content-type'] !== 'application/json') {
             return response.status(400).send("Content-Type is not correctly set and must be of 'application/json'");
@@ -36,7 +36,7 @@ export const postCommentRequest = async (request, response) => {
     }
 }
 
-export const postReplyRequest = async (request, response) => {
+export const POSTReplyRequest = async (request, response) => {
     try {
         let newDocument = {
             _id: new ObjectId(),
@@ -63,7 +63,7 @@ export const postReplyRequest = async (request, response) => {
     }
 }
 
-export const patchCommentRequest = async (request, response) => {
+export const PATCHCommentRequest = async (request, response) => {
     try {
         let result = await updateComment(request.body.id, request.body.newContent);
         response.status(200).send(result);
@@ -73,7 +73,7 @@ export const patchCommentRequest = async (request, response) => {
     }
 }
 
-export const patchReplyRequest = async (request, response) => {
+export const PATCHReplyRequest = async (request, response) => {
     try {
         let result = await updateReply(request.body.id, request.body.newContent);
         response.status(200).send(result);
@@ -83,7 +83,7 @@ export const patchReplyRequest = async (request, response) => {
     }
 }
 
-export const deleteCommentRequest = async (request, response) => {
+export const DELETECommentRequest = async (request, response) => {
     try {
         const result = await removeComment(request.body.targetId)
         response.status(204).send(result);
@@ -93,7 +93,7 @@ export const deleteCommentRequest = async (request, response) => {
     }
 }
 
-export const deleteReplyRequest = async (request, response) => {
+export const DELETEReplyRequest = async (request, response) => {
     try {
         const result = await removeReply(request.body.targetId);
         response.status(204).send(result);

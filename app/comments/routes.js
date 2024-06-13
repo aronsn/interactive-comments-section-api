@@ -1,17 +1,17 @@
 import express from "express";
-import { getCommentsRequest, postCommentRequest, postReplyRequest, patchCommentRequest, patchReplyRequest, deleteCommentRequest, deleteReplyRequest } from "./controllers.js";
+import { GETCommentsRequest, POSTCommentRequest, POSTReplyRequest, PATCHCommentRequest, PATCHReplyRequest, DELETECommentRequest, DELETEReplyRequest } from "./controllers.js";
 
 const router = express.Router();
 
 router.route("/")
-    .get(getCommentsRequest)
-    .post(postCommentRequest)
-    .patch(patchCommentRequest)
-    .delete(deleteReplyRequest)
+    .get(GETCommentsRequest)
+    .post(POSTCommentRequest)
+    .patch(PATCHCommentRequest)
+    .delete(DELETEReplyRequest)
 
 router.route("/reply")
-    .post(postReplyRequest)
-    .patch(patchReplyRequest)
-    .delete(deleteCommentRequest)
+    .post(POSTReplyRequest)
+    .patch(PATCHReplyRequest)
+    .delete(DELETECommentRequest)
 
 export default router;

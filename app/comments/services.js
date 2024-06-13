@@ -17,9 +17,27 @@ export const allComments = async () => {
     return results;
 }
 
-export const createComment = async (document) => {
+export const createComment = async (content, createdAt, score, username) => {
+
+    const document = {
+        _id: new ObjectId(),
+        content: content,
+        createdAt: createdAt,
+        score: score,
+        user: {
+            image: {
+                png: `../public/avatars/image-${username}.png`,
+                webp: `../public/avatars/image-${username}.webp`
+            },
+            username: username,
+        },
+        replies: [],
+    };
+
     let collection = await db.collection("comments");
+
     let result = await collection.insertOne(document);
+
     return result;
 }
 
