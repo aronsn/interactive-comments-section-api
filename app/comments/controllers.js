@@ -1,106 +1,105 @@
 import { ObjectId } from "mongodb";
 import { allComments, createComment, createReply, removeComment, removeReply, updateComment, updateReply } from "./services.js";
 
-export const getCommentsRequest = async (req, res) => {
+export const getCommentsRequest = async (request, response) => {
     try {
         const results = await allComments();
-        res.send(results).status(200);
+        return response.status(200).send(results);
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Error fetching comments");
+        console.error(`\n${error}`);
+        response.status(500).send(`Error fetching comments: ${error}`);
     }
 }
 
-export const postCommentRequest = async (req, res) => {
+export const postCommentRequest = async (request, response) => {
     try {
         let newDocument = {
             _id: new ObjectId(),
-            content: req.body.content,
-            createdAt: req.body.createdAt,
-            score: req.body.score,
+            content: request.body.content,
+            createdAt: request.body.createdAt,
+            score: request.body.score,
             user: {
                 image: {
-                    png: `../public/avatars/image-${req.body.user.username}.png`,
-                    webp: `../public/avatars/image-${req.body.user.username}.webp`
+                    png: `../public/avatars/image-${request.body.user.username}.png`,
+                    webp: `../public/avatars/image-${request.body.user.username}.webp`
                 },
-                username: req.body.user.username,
+                username: request.body.user.username,
             },
             replies: [],
         };
 
         const result = await createComment(newDocument);
-        res.send(result).status(201);
+        response.status(201).send(result);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Error adding comment");
+        console.error(`\n${error}`);
+        response.status(500).send(`Error creating comment: ${error}`);
     }
 }
 
-export const postReplyRequest = async (req, res) => {
+export const postReplyRequest = async (request, response) => {
     try {
         let newDocument = {
             _id: new ObjectId(),
-            content: req.body.content,
-            createdAt: req.body.createdAt,
-            score: req.body.score,
-            replyingTo: req.body.replyingTo,
+            content: request.body.content,
+            createdAt: request.body.createdAt,
+            score: request.body.score,
+            replyingTo: request.body.replyingTo,
             user: {
                 image: {
-                    png: `../public/avatars/image-${req.body.user.username}.png`,
-                    webp: `../public/avatars/image-${req.body.user.username}.webp`
+                    png: `../public/avatars/image-${request.body.user.username}.png`,
+                    webp: `../public/avatars/image-${request.body.user.username}.webp`
                 },
-                username: req.body.user.username,
+                username: request.body.user.username,
             },
-            commentId: new ObjectId(req.body.id)
+            commentId: new ObjectId(request.body.id)
         };
 
         const result = await createReply(newDocument);
-        res.send(result).status(204);
+        response.status(204).send(result);
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Error adding reply");
+        console.error(`\n${error}`);
+        response.status(500).send(`Error creating reply: ${error}`);
+
     }
 }
 
-export const patchCommentRequest = async (req, res) => {
+export const patchCommentRequest = async (request, response) => {
     try {
-        let result = await updateComment(req.body.id, req.body.newContent);
-        res.send(result).status(200);
+        let result = await updateComment(request.body.id, request.body.newContent);
+        response.status(200).send(result);
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Error updating comment");
+        console.error(`\n${error}`);
+        response.status(500).send(`Error updating comment: ${error}`);
     }
 }
 
-export const patchReplyRequest = async (req, res) => {
+export const patchReplyRequest = async (request, response) => {
     try {
-        let result = await updateReply(req.body.id, req.body.newContent);
-        res.send(result).status(200);
+        let result = await updateReply(request.body.id, request.body.newContent);
+        response.status(200).send(result);
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Error updating reply");
+        console.error(`\n${error}`);
+        response.status(500).send(`Error updating reply: ${error}`);
     }
 }
 
-export const deleteCommentRequest = async (req, res) => {
+export const deleteCommentRequest = async (request, response) => {
     try {
-        const result = await removeComment(req.body.targetId)
-        res.send(result).status(204);
-
+        const result = await removeComment(request.body.targetId)
+        response.status(204).send(result);
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Error deleting comment");
+        console.error(`\n${error}`);
+        response.status(500).send(`Error deleting comment: ${error}`);
     }
 }
 
-export const deleteReplyRequest = async (req, res) => {
+export const deleteReplyRequest = async (request, response) => {
     try {
-        const result = await removeReply(req.body.targetId)
-        res.send(result).status(204);
-
+        const result = await removeReply(request.body.targetId);
+        response.status(204).send(result);
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Error deleting reply");
+        console.error(`\n${error}`);
+        response.status(500).send(`Error deleting reply: ${error}`);
     }
 }
