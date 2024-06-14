@@ -1,4 +1,3 @@
-import { ObjectId } from "mongodb";
 import { allComments, createComment, createReply, removeComment, removeReply, updateComment, updateReply } from "./services.js";
 
 export const GETCommentsRequest = async (request, response) => {
@@ -17,17 +16,24 @@ export const POSTCommentRequest = async (request, response) => {
             return response.status(400).send("Content-Type is not correctly set and must be of 'application/json'");
         }
 
-        const { content, createdAt, score, username } = request.body;
+        const { content, createdAt, username } = request.body;
 
-        if (content === undefined || createdAt === undefined || username === undefined || score === undefined) {
+        for (let key in request.body) {
+            if (!['content', 'createdAt', 'username'].includes(key)) {
+                return response.status(400).send('Request is malformed or invalid. The body has unwanted properties');
+            }
+        }
+
+        if (content === undefined || createdAt === undefined || username === undefined) {
             return response.status(400).send('Request is malformed or invalid. The body is missing properties');
         }
 
-        if (typeof content !== 'string' || typeof createdAt !== 'string' || typeof username !== 'string' || typeof score !== 'number') {
+        if (typeof content !== 'string' || typeof createdAt !== 'string' || typeof username !== 'string') {
             return response.status(400).send('Request is malformed or invalid. Check if the data types of the properties provided are correct');
         }
 
-        const result = await createComment(content, createdAt, score, username);
+        const result = await createComment({ content, createdAt, score: 0, username });
+
         return response.status(201).send(result);
 
     } catch (error) {
@@ -38,24 +44,30 @@ export const POSTCommentRequest = async (request, response) => {
 
 export const POSTReplyRequest = async (request, response) => {
     try {
-        let newDocument = {
-            _id: new ObjectId(),
-            content: request.body.content,
-            createdAt: request.body.createdAt,
-            score: request.body.score,
-            replyingTo: request.body.replyingTo,
-            user: {
-                image: {
-                    png: `../public/avatars/image-${request.body.user.username}.png`,
-                    webp: `../public/avatars/image-${request.body.user.username}.webp`
-                },
-                username: request.body.user.username,
-            },
-            commentId: new ObjectId(request.body.id)
-        };
+        if (!request.headers['content-type'] && request.headers['content-type'] !== 'application/json') {
+            return response.status(400).send("Content-Type is not correctly set and must be of 'application/json'");
+        }
 
-        const result = await createReply(newDocument);
-        response.status(204).send(result);
+        const { id, content, createdAt, replyingTo, username } = request.body;
+
+        for (let key in request.body) {
+            if (!['id', 'content', 'createdAt', 'replyingTo', 'username'].includes(key)) {
+                return response.status(400).send('Request is malformed or invalid. The body has unwanted properties');
+            }
+        }
+
+        if (id === undefined || content === undefined || createdAt === undefined || username === undefined || replyingTo === undefined) {
+            return response.status(400).send('Request is malformed or invalid. The body is missing properties');
+        }
+
+        if (typeof id !== 'string' || typeof content !== 'string' || typeof createdAt !== 'string' || typeof username !== 'string' || typeof replyingTo !== 'string') {
+            return response.status(400).send('Request is malformed or invalid. Check if the data types of the properties provided are correct');
+        }
+
+        const result = await createReply({ id, content, createdAt, score: 0, replyingTo, username });
+
+        return response.status(201).send(result);
+
     } catch (error) {
         console.error(`\n${error}`);
         response.status(500).send(`Error creating reply: ${error}`);
