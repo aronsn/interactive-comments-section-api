@@ -17,21 +17,20 @@ export const allComments = async () => {
     return results;
 }
 
-export const createComment = async (content, createdAt, score, username) => {
+export const createComment = async (data) => {
 
     const document = {
         _id: new ObjectId(),
-        content: content,
-        createdAt: createdAt,
-        score: score,
+        content: data.content,
+        createdAt: data.createdAt,
+        score: data.score,
         user: {
             image: {
-                png: `../public/avatars/image-${username}.png`,
-                webp: `../public/avatars/image-${username}.webp`
+                png: `../public/avatars/image-${data.username}.png`,
+                webp: `../public/avatars/image-${data.username}.webp`
             },
-            username: username,
+            username: data.username,
         },
-        replies: [],
     };
 
     let collection = await db.collection("comments");
@@ -41,12 +40,29 @@ export const createComment = async (content, createdAt, score, username) => {
     return result;
 }
 
-export const createReply = async (document) => {
+export const createReply = async (data) => {
+
+    let document = {
+        _id: new ObjectId(),
+        content: data.content,
+        createdAt: data.createdAt,
+        score: data.score,
+        replyingTo: data.replyingTo,
+        user: {
+            image: {
+                png: `../public/avatars/image-${data.username}.png`,
+                webp: `../public/avatars/image-${data.username}.webp`
+            },
+            username: data.username,
+        },
+        commentId: new ObjectId(data.id)
+    };
+
     let collection = await db.collection("replies");
+
     let result = await collection.insertOne(document);
 
     return result;
-
 }
 
 export const updateComment = async (targetId, newContent) => {
