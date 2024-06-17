@@ -18,9 +18,9 @@ export const POSTCommentRequest = async (request, response) => {
 
         const { content, createdAt, username } = request.body;
 
-        for (let key in request.body) {
-            if (!['content', 'createdAt', 'username'].includes(key)) {
-                return response.status(400).send('Request is malformed or invalid. The body has unwanted properties');
+        for (let property in request.body) {
+            if (!['content', 'createdAt', 'username'].includes(property)) {
+                return response.status(400).send(`Request is malformed or invalid. "${property}" property is not recognized. `);
             }
         }
 
@@ -50,9 +50,9 @@ export const POSTReplyRequest = async (request, response) => {
 
         const { id, content, createdAt, replyingTo, username } = request.body;
 
-        for (let key in request.body) {
-            if (!['id', 'content', 'createdAt', 'replyingTo', 'username'].includes(key)) {
-                return response.status(400).send('Request is malformed or invalid. The body has unwanted properties');
+        for (let property in request.body) {
+            if (!['id', 'content', 'createdAt', 'replyingTo', 'username'].includes(property)) {
+                return response.status(400).send(`Request is malformed or invalid. "${property}" property is not recognized. `);
             }
         }
 
