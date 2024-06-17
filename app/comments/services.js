@@ -34,7 +34,6 @@ export const createComment = async (data) => {
     };
 
     let collection = await db.collection("comments");
-
     let result = await collection.insertOne(document);
 
     return result;
@@ -59,30 +58,30 @@ export const createReply = async (data) => {
     };
 
     let collection = await db.collection("replies");
-
     let result = await collection.insertOne(document);
 
     return result;
 }
 
-export const updateComment = async (targetId, newContent) => {
-    const query = { _id: new ObjectId(targetId) };
+export const updateComment = async (data) => {
+    const query = { _id: new ObjectId(data.id) };
     const updates = {
         $set: {
-            content: newContent
+            content: data.newContent
         },
     };
 
     let collection = await db.collection("comments");
     let result = await collection.updateOne(query, updates);
+
     return result;
 }
 
-export const updateReply = async (targetId, newContent) => {
-    const query = { _id: new ObjectId(targetId) };
+export const updateReply = async (data) => {
+    const query = { _id: new ObjectId(data.id) };
     const updates = {
         $set: {
-            content: newContent
+            content: data.newContent
         },
     };
 
@@ -91,14 +90,14 @@ export const updateReply = async (targetId, newContent) => {
     return result;
 }
 
-export const removeComment = async (targetId) => {
+export const removeComment = async (data) => {
     let collection = await db.collection("comments");
-    let result = collection.deleteOne({ _id: new ObjectId(targetId) });
+    let result = collection.deleteOne({ _id: new ObjectId(data.id) });
     return result;
 }
 
-export const removeReply = async (targetId) => {
+export const removeReply = async (data) => {
     let collection = await db.collection("replies");
-    let result = collection.deleteOne({ _id: new ObjectId(targetId) });
+    let result = collection.deleteOne({ _id: new ObjectId(data.id) });
     return result;
 }
