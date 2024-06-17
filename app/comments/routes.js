@@ -7,11 +7,11 @@ router.route("/")
     .get(GETCommentsRequest)
     .post(POSTCommentRequest)
     .patch(PATCHCommentRequest)
-    .delete(DELETEReplyRequest)
+    .delete(DELETECommentRequest)
 
 router.route("/reply")
     .post(POSTReplyRequest)
     .patch(PATCHReplyRequest)
-    .delete(DELETECommentRequest)
+    .delete(DELETEReplyRequest)
 
 export default router;
