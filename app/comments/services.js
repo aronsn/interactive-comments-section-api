@@ -22,7 +22,7 @@ export const createComment = async (data) => {
     const document = {
         _id: new ObjectId(),
         content: data.content,
-        createdAt: data.createdAt,
+        createdAt: new Date(),
         score: data.score,
         user: {
             image: {
@@ -44,7 +44,7 @@ export const createReply = async (data) => {
     let document = {
         _id: new ObjectId(),
         content: data.content,
-        createdAt: data.createdAt,
+        createdAt: new Date(),
         score: data.score,
         replyingTo: data.replyingTo,
         user: {
