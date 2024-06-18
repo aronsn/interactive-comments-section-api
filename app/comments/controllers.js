@@ -38,7 +38,7 @@ export const POSTCommentRequest = async (request, response) => {
 
     } catch (error) {
         console.error(`\n${error}`);
-        return response.status(500).send(`Creating comment failed. Error: ${error}`);
+        return response.status(500).send(`Error: Unable to create comment. ${error}`);
     }
 }
 
@@ -54,7 +54,11 @@ export const POSTReplyRequest = async (request, response) => {
             return response.status(400).send('Request is malformed or invalid. The body is missing properties');
         }
 
-        if (typeof id !== 'string' || typeof content !== 'string' || typeof createdAt !== 'string' || typeof username !== 'string' || typeof replyingTo !== 'string') {
+        if (!/^[0-9a-fA-F]{24}$/.test(id) || typeof id !== 'string') {
+            return response.status(400).send('Request is malformed or invalid. The "id" must be a 24 character hex string');
+        }
+
+        if (typeof content !== 'string' || typeof createdAt !== 'string' || typeof username !== 'string' || typeof replyingTo !== 'string') {
             return response.status(400).send('Request is malformed or invalid. Check if the data types of the properties provided are correct');
         }
 
@@ -70,7 +74,7 @@ export const POSTReplyRequest = async (request, response) => {
 
     } catch (error) {
         console.error(`\n${error}`);
-        response.status(500).send(`Error creating reply: ${error}`);
+        response.status(500).send(`Error: Unable to create reply. ${error}`);
 
     }
 }
@@ -87,7 +91,11 @@ export const PATCHCommentRequest = async (request, response) => {
             return response.status(400).send('Request is malformed or invalid. The body is missing properties');
         }
 
-        if (typeof id !== 'string' || typeof newContent !== 'string') {
+        if (!/^[0-9a-fA-F]{24}$/.test(id) || typeof id !== 'string') {
+            return response.status(400).send('Request is malformed or invalid. The "id" must be a 24 character hex string');
+        }
+
+        if (typeof newContent !== 'string') {
             return response.status(400).send('Request is malformed or invalid. Check if the data types of the properties provided are correct');
         }
 
@@ -102,7 +110,7 @@ export const PATCHCommentRequest = async (request, response) => {
 
     } catch (error) {
         console.error(`\n${error}`);
-        response.status(500).send(`Error updating comment: ${error}`);
+        response.status(500).send(`Error: Unable to update comment. ${error.message}`);
     }
 }
 
@@ -118,7 +126,11 @@ export const PATCHReplyRequest = async (request, response) => {
             return response.status(400).send('Request is malformed or invalid. The body is missing properties');
         }
 
-        if (typeof id !== 'string' || typeof newContent !== 'string') {
+        if (!/^[0-9a-fA-F]{24}$/.test(id) || typeof id !== 'string') {
+            return response.status(400).send('Request is malformed or invalid. The "id" must be a 24 character hex string');
+        }
+
+        if (typeof newContent !== 'string') {
             return response.status(400).send('Request is malformed or invalid. Check if the data types of the properties provided are correct');
         }
 
@@ -133,7 +145,7 @@ export const PATCHReplyRequest = async (request, response) => {
 
     } catch (error) {
         console.error(`\n${error}`);
-        return response.status(500).send(`Error updating reply: ${error}`);
+        return response.status(500).send(`Error: Unable to update reply. ${error.message}`);
     }
 }
 
@@ -149,8 +161,8 @@ export const DELETECommentRequest = async (request, response) => {
             return response.status(400).send('Request is malformed or invalid. The body is missing properties');
         }
 
-        if (typeof id !== 'string') {
-            return response.status(400).send('Request is malformed or invalid. Check if the data types of the properties provided are correct');
+        if (!/^[0-9a-fA-F]{24}$/.test(id) || typeof id !== 'string') {
+            return response.status(400).send('Request is malformed or invalid. The "id" must be a 24 character hex string');
         }
 
         for (let property in request.body) {
@@ -164,7 +176,7 @@ export const DELETECommentRequest = async (request, response) => {
 
     } catch (error) {
         console.error(`\n${error}`);
-        return response.status(500).send(`Error deleting comment: ${error}`);
+        return response.status(500).send(`Error: Unable to delete comment. ${error.message}`);
     }
 }
 
@@ -180,8 +192,8 @@ export const DELETEReplyRequest = async (request, response) => {
             return response.status(400).send('Request is malformed or invalid. The body is missing properties');
         }
 
-        if (typeof id !== 'string') {
-            return response.status(400).send('Request is malformed or invalid. Check if the data types of the properties provided are correct');
+        if (!/^[0-9a-fA-F]{24}$/.test(id) || typeof id !== 'string') {
+            return response.status(400).send('Request is malformed or invalid. The "id" must be a 24 character hex string');
         }
 
         for (let property in request.body) {
@@ -195,6 +207,6 @@ export const DELETEReplyRequest = async (request, response) => {
 
     } catch (error) {
         console.error(`\n${error}`);
-        return response.status(500).send(`Error deleting reply: ${error}`);
+        return response.status(500).send(`Error: Unable to delete reply. ${error.message}`);
     }
 }
