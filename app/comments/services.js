@@ -2,18 +2,9 @@ import db from "../../db/connection.js";
 import { ObjectId } from "mongodb";
 
 
-export const allComments = async () => {
-    let collection = await db.collection("comments");
-    let results = await collection.aggregate([
-        {
-            $lookup: {
-                from: "replies",
-                localField: "_id",
-                foreignField: "commentId",
-                as: "replies"
-            }
-        }
-    ]).toArray();
+export const getComments = async () => {
+    let collection = db.collection("comments");
+    let results = await collection.find().toArray();
     return results;
 }
 
@@ -31,10 +22,23 @@ export const createComment = async (data) => {
             },
             username: data.username,
         },
+        replies: [],
     };
 
-    let collection = await db.collection("comments");
+    let collection = db.collection("comments");
     let result = await collection.insertOne(document);
+
+    return result;
+}
+
+export const findComment = async (id) => {
+    let collection = db.collection("comments");
+    let result = await collection.findOne({ _id: new ObjectId(id) });
+
+    if (!result) {
+        result = await collection.findOne({ "replies._id": new ObjectId(id) });
+        return result.replies.find(reply => new ObjectId(id).toString() === reply._id.toString());
+    }
 
     return result;
 }
@@ -54,13 +58,20 @@ export const createReply = async (data) => {
             },
             username: data.username,
         },
-        commentId: new ObjectId(data.id)
     };
 
-    let collection = await db.collection("replies");
-    let result = await collection.insertOne(document);
+    const query = { _id: new ObjectId(data.id) };
+    const append = {
+        $push: {
+            replies: document
+        },
+    };
+
+    let collection = db.collection("comments");
+    let result = await collection.findOneAndUpdate(query, append);
 
     return result;
+
 }
 
 export const updateComment = async (data) => {
@@ -71,7 +82,7 @@ export const updateComment = async (data) => {
         },
     };
 
-    let collection = await db.collection("comments");
+    let collection = db.collection("comments");
     let result = await collection.findOneAndUpdate(query, update);
 
     if (result == null) {
@@ -82,28 +93,30 @@ export const updateComment = async (data) => {
 }
 
 export const updateReply = async (data) => {
-    const query = { _id: new ObjectId(data.id) };
+    const query = { "replies._id": new ObjectId(data.id) };
     const update = {
         $set: {
-            content: data.newContent
+            "replies.$.content": data.newContent
         },
     };
 
-    let collection = await db.collection("replies");
-    let result = await collection.findOneAndUpdate(query, update);
+    let collection = db.collection("comments");
+    let result = await collection.findOneAndUpdate(query, update, {
+        returnDocument: 'after'
+    });
 
-    if (result == null) {
+    if (!result) {
         throw new Error(`There is no reply that corresponds to "${data.id}"`);
     }
 
     return result;
-}
+};
 
 export const removeComment = async (data) => {
-    let collection = await db.collection("comments");
+    let collection = db.collection("comments");
     let result = await collection.findOneAndDelete({ _id: new ObjectId(data.id) });
 
-    if (result == null) {
+    if (!result) {
         throw new Error(`There is no comment that corresponds to "${data.id}"`);
     }
 
@@ -111,10 +124,21 @@ export const removeComment = async (data) => {
 }
 
 export const removeReply = async (data) => {
-    let collection = await db.collection("replies");
-    let result = await collection.findOneAndDelete({ _id: new ObjectId(data.id) });
+    let collection = db.collection("comments");
 
-    if (result == null) {
+    let result = await collection.findOneAndUpdate(
+        { "replies._id": new ObjectId(data.id) },
+        {
+            $pull: {
+                replies: { _id: new ObjectId(data.id) }
+            }
+        },
+        {
+            returnDocument: 'after'
+        }
+    );
+
+    if (!result) {
         throw new Error(`There is no reply that corresponds to "${data.id}"`);
     }
 
