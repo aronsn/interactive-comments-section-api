@@ -68,22 +68,67 @@ export const createReply = async (data) => {
     };
 
     let collection = db.collection("comments");
-    let result = await collection.findOneAndUpdate(query, append);
+    let result = await collection.findOneAndUpdate(query, append, {
+        returnDocument: 'after'
+    });
 
     return result;
 
 }
 
-export const updateComment = async (data) => {
+export const updateCommentScore = async (data) => {
     const query = { _id: new ObjectId(data.id) };
     const update = {
+        $inc: {
+            score: data.score
+        }
+    };
+
+    let collection = db.collection("comments");
+    let result = await collection.findOneAndUpdate(query, update, {
+        returnDocument: 'after'
+    });
+
+    if (result == null) {
+        throw new Error(`There is no comment that corresponds to "${data.id}"`);
+    }
+
+    return result;
+}
+
+export const updateReplyScore = async (data) => {
+    const query = { "replies._id": new ObjectId(data.id) };
+    const update = {
+        $inc: {
+            "replies.$.content": data.score
+        }
+    };
+
+    let collection = db.collection("comments");
+    let result = await collection.findOneAndUpdate(query, update, {
+        returnDocument: 'after'
+    });
+
+    if (result == null) {
+        throw new Error(`There is no comment that corresponds to "${data.id}"`);
+    }
+
+    return result;
+}
+
+
+export const updateComment = async (data) => {
+    const query = { _id: new ObjectId(data.id) };
+    let update = {
         $set: {
             content: data.newContent
         },
     };
 
     let collection = db.collection("comments");
-    let result = await collection.findOneAndUpdate(query, update);
+    let result = await collection.findOneAndUpdate(query, update, {
+        returnDocument: 'after'
+    });
 
     if (result == null) {
         throw new Error(`There is no comment that corresponds to "${data.id}"`);
