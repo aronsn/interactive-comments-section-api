@@ -44,7 +44,6 @@ export const findComment = async (id) => {
 }
 
 export const createReply = async (data) => {
-
     let document = {
         _id: new ObjectId(),
         content: data.content,
@@ -59,20 +58,37 @@ export const createReply = async (data) => {
             username: data.username,
         },
     };
+    let collection = db.collection("comments");
 
-    const query = { _id: new ObjectId(data.id) };
+    let result = await collection.findOne({ _id: new ObjectId(data.id) });
+    let query = { _id: new ObjectId(data.id) };
+    if (!result) {
+        query = { "replies._id": new ObjectId(data.id) };
+    }
+
     const append = {
         $push: {
             replies: document
         },
     };
 
-    let collection = db.collection("comments");
-    let result = await collection.findOneAndUpdate(query, append, {
-        returnDocument: 'after'
-    });
 
-    return result;
+    try {
+
+        let result = await collection.findOneAndUpdate(query, append, {
+            returnDocument: 'after',
+        });
+
+
+        if (!result) {
+            throw new Error(`Comment with ID ${data.id} not found.`);
+        }
+
+        return result;
+    } catch (error) {
+        console.error("Error updating document:", error);
+        throw error;
+    }
 
 }
 
@@ -159,7 +175,9 @@ export const updateReply = async (data) => {
 
 export const removeComment = async (data) => {
     let collection = db.collection("comments");
-    let result = await collection.findOneAndDelete({ _id: new ObjectId(data.id) });
+    let result = await collection.findOneAndDelete({ _id: new ObjectId(data.id) }, {
+        returnDocument: 'after'
+    });
 
     if (!result) {
         throw new Error(`There is no comment that corresponds to "${data.id}"`);

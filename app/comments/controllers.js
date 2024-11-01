@@ -18,7 +18,7 @@ export const createCommentRequest = async (request, response) => {
 
         const { id, content, username } = request.body;
 
-        if (content === undefined || username === undefined) {
+        if (content === "" || content === undefined || username === undefined) {
             return response.status(400).send('Request is malformed or invalid. The body is missing properties');
         }
 
@@ -68,7 +68,7 @@ export const editCommentRequest = async (request, response) => {
 
         const { id, newContent, username, like } = request.body;
 
-        if (id === undefined || username === undefined || (newContent === undefined && like === undefined)) {
+        if (id === undefined || newContent === undefined && like === undefined || username === undefined && like === undefined || newContent === undefined && like === undefined) {
             return response.status(400).send('Request is malformed or invalid. The body is missing properties');
         }
 
@@ -170,12 +170,12 @@ export const deleteCommentRequest = async (request, response) => {
         }
 
         if (isReply) {
-            await removeReply({ id });
-            return response.status(204).send("Document successfully deleted");
+            const result = await removeReply({ id });
+            return response.status(200).send(result);
         }
 
-        await removeComment({ id });
-        return response.status(204).send("Document successfully deleted");
+        const result = await removeComment({ id });
+        return response.status(200).send(result);
 
     } catch (error) {
         console.error(`\n${error}`);
