@@ -100,7 +100,7 @@ export const editCommentRequest = async (request, response) => {
 
             if (isReply) {
                 let result = await updateReply({ id, newContent });
-                return response.status(204).send(result);
+                return response.status(200).send(result);
             }
 
             let result = await updateComment({ id, newContent });
@@ -124,7 +124,7 @@ export const editCommentRequest = async (request, response) => {
 
             if (isReply) {
                 let result = await updateReplyScore({ id, score: number });
-                return response.status(204).send(result);
+                return response.status(200).send(result);
             }
 
             let result = await updateCommentScore({ id, score: number });

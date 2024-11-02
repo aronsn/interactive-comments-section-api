@@ -116,7 +116,7 @@ export const updateReplyScore = async (data) => {
     const query = { "replies._id": new ObjectId(data.id) };
     const update = {
         $inc: {
-            "replies.$.content": data.score
+            "replies.$.score": data.score
         }
     };
 
