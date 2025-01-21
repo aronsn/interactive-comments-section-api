@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "rest-api",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "dev": "npm run db:start && npx nodemon --env-file=config.env server.js",
+    "build": "esbuild server.js --bundle --minify --format=esm --platform=node --outfile=dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:start": "sudo systemctl start mongod",
     "db:stop": "sudo systemctl stop mongod",
@@ -22,11 +24,12 @@
   "homepage": "https://github.com/aronsn/interactive-comments-section-api#readme",
   "dependencies": {
     "cors": "2.8.5",
-    "express": "4.19.2",
+    "dotenv": "16.4.5",
+    "express": "4.21.1",
     "mongodb": "6.5.0"
   },
-  "type": "module",
   "devDependencies": {
+    "esbuild": "0.24.0",
     "nodemon": "3.1.0"
   }
 }
