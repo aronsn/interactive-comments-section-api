@@ -30,7 +30,14 @@ Users should be able to:
 
 ### Screenshot
 
-![](./screenshot.jpg)
+#### Desktop
+
+![Screenshot 2025-01-22 at 08-48-53 Frontend Mentor Interactive comments section](https://github.com/user-attachments/assets/99dc0220-8e35-4ca3-ad62-96969fad0e8b)
+
+#### Mobile
+
+![Screenshot 2025-01-22 at 08-49-15 Frontend Mentor Interactive comments section](https://github.com/user-attachments/assets/47322824-6f1b-4c8a-98c1-ebbe048fd047)
+
 
 ### Links
 
