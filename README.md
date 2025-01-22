@@ -54,8 +54,8 @@ Users should be able to:
 - CSS Grid
 - Mobile-first workflow
 - [React](https://reactjs.org/) - JS library
-- [Express]() - JS - [Express]() - JS framework 
-- [MongoDB]() - Database 
+- [Express](https://expressjs.com/) - Web application framework
+- [MongoDB](https://www.mongodb.com/) - Document database
 
 ### What I learned
 
