@@ -35,7 +35,7 @@ Users should be able to:
 ### Links
 
 - Solution URL: [Interactive comments section](https://interactive-comments-section-api-production.up.railway.app/)
-- Backend project: [interactive-comments-section-api](https://github.com/aronsn/interactive-comments-section-api)
+- Frontend project: [interactive-comments-section-web](https://github.com/aronsn/interactive-comments-section-web)
 
 ## My process
 
