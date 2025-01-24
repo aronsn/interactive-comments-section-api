@@ -17,8 +17,8 @@ export const createComment = async (data) => {
         score: data.score,
         user: {
             image: {
-                png: `../public/avatars/image-${data.username}.png`,
-                webp: `../public/avatars/image-${data.username}.webp`
+                png: `/avatars/image-${data.username}.png`,
+                webp: `/avatars/image-${data.username}.webp`
             },
             username: data.username,
         },
@@ -52,8 +52,8 @@ export const createReply = async (data) => {
         replyingTo: data.replyingTo,
         user: {
             image: {
-                png: `../public/avatars/image-${data.username}.png`,
-                webp: `../public/avatars/image-${data.username}.webp`
+                png: `/avatars/image-${data.username}.png`,
+                webp: `/avatars/image-${data.username}.webp`
             },
             username: data.username,
         },
