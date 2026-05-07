@@ -25,7 +25,6 @@ Users should be able to:
 - See hover states for all interactive elements on the page
 - Create, Read, Update, and Delete comments and replies
 - Upvote and downvote comments
-- **Bonus**: If you're building a purely front-end project, use `localStorage` to save the current state in the browser that persists when the browser is refreshed.
 - **Bonus**: Instead of using the `createdAt` strings from the `data.json` file, try using timestamps and dynamically track the time since the comment or reply was posted.
 
 ### Screenshot
@@ -41,39 +40,51 @@ Users should be able to:
 
 ### Links
 
-- Solution URL: [Interactive comments section](https://interactive-comments-section-api-production.up.railway.app/)
+- Live site: [interactive-comments-section-web.vercel.app](https://interactive-comments-section-web.vercel.app)
 - Frontend project: [interactive-comments-section-web](https://github.com/aronsn/interactive-comments-section-web)
 
 ## My process
 
 ### Built with
 
-- Semantic HTML5 markup
-- CSS custom properties
-- Flexbox
-- CSS Grid
-- Mobile-first workflow
-- [React](https://reactjs.org/) - JS library
 - [Express](https://expressjs.com/) - Web application framework
 - [MongoDB](https://www.mongodb.com/) - Document database
+- [MongoDB Atlas](https://www.mongodb.com/atlas) - Cloud database hosting
+- [Render](https://render.com/) - API hosting
+
+### Deployment
+
+The API is deployed on [Render](https://render.com/) as a Node.js web service. The database is hosted on [MongoDB Atlas](https://www.mongodb.com/atlas) (M0 free tier).
+
+The following environment variables are required:
+
+| Variable | Description |
+|---|---|
+| `MONGODB_URI` | MongoDB Atlas connection string |
+| `FRONTEND_URL` | URL of the frontend app (used for CORS) |
+
+For local development, a `docker-compose.yml` is included to spin up a local MongoDB instance and Mongo Express UI:
+
+```bash
+docker compose up
+```
+
+Then create a `config.env` file with:
+MONGODB_URI=mongodb://root:example@localhost:27017/interactive-comments-section?authSource=admin
+FRONTEND_URL=http://localhost:5173
 
 ### What I learned
 
-- How to deploy an app to the internet with other services.
-- How to bundle the frontend and make the backend serve the bundled frontend files.
 - How to build a REST API and program server logic.
-- How to build with a document-based database
+- How to build with a document-based database.
+- How to deploy a Node.js API to Render with a cloud database on MongoDB Atlas.
+- How to configure CORS to allow requests from a separately deployed frontend.
 
 ### Continued development
 
-- Choose hosting options that are better localized
-- Containerize the stack to mimick production environment or make developement more "easier".
+- Containerize the full stack to better mimic the production environment.
+- Add authentication so users have persistent identities.
 
 ## Author
 
 - Frontend Mentor - [@aronsn](https://www.frontendmentor.io/profile/aronsn)
-
-
-
-
-
