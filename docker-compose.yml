@@ -1,24 +1,50 @@
-# Use root/example as user/password credentials
-version: '3.1'
-
+# Dev stack: API (with live reload) + MongoDB + mongo-express admin UI.
+#
+# `node`   - the Node server, built from the local Dockerfile. Source is
+#           bind-mounted so saving a file on the host triggers nodemon to
+#           restart the server inside the container.
+# `mongo` - mirrors the local `sudo systemctl start mongod` setup: no auth,
+#           bound to 127.0.0.1, data persisted in a named volume.
+#
+# Stop the system mongod before `docker compose up` -- both want port 27017:
+#   sudo systemctl stop mongod && docker compose up --build
 services:
+
+  node:
+    build: .
+    ports:
+      - "127.0.0.1:5050:5050"
+    environment:
+      # Inside the docker network, mongo is reachable at the service name.
+      # This OVERRIDES the value in config.env (which uses localhost for the
+      # `npm run dev` case where the app runs on the host).
+      MONGODB_URI: mongodb://mongo:27017
+      PORT: 5050
+      FRONTEND_URL: ${FRONTEND_URL:-}
+    volumes:
+      # Bind the project root into the container so nodemon sees host edits.
+      - .:/app
+      # Anonymous volume that GUARDS the container's `node_modules` from the
+      # bind mount above. Without this, the host's node_modules (which may not
+      # match alpine/linux-x64) would shadow the ones installed in the image.
+      - /app/node_modules
+    depends_on:
+      mongo:
+        condition: service_healthy
 
   mongo:
     image: mongo
     restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
     ports:
-      - 27017:27017
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  mongo-express:
-    image: mongo-express
-    restart: always
-    ports:
-      - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
-      ME_CONFIG_BASICAUTH: false
+volumes:
+  mongo-data:
