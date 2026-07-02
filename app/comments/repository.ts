@@ -13,17 +13,38 @@
  * nothing about the repository (dependencies point inward).
  */
 
-import { ObjectId } from "mongodb";
-import { Comment, Reply } from "./domain.js";
+import { type Collection, type Db, ObjectId } from "mongodb";
+import { Comment, Reply, type User } from "./domain.js";
+import type { CommentRepositoryPort } from "./application.js";
 
-class CommentRepository {
-    constructor(db) {
-        this.collection = db.collection("comments");
+type ReplyDocument = {
+    _id: ObjectId;
+    content: string;
+    createdAt: Date;
+    score: number;
+    replyingTo: string;
+    user: User;
+};
+
+type CommentDocument = {
+    _id: ObjectId;
+    content: string;
+    createdAt: Date;
+    score: number;
+    user: User;
+    replies: ReplyDocument[];
+};
+
+class CommentRepository implements CommentRepositoryPort {
+    private readonly collection: Collection<CommentDocument>;
+
+    constructor(db: Db) {
+        this.collection = db.collection<CommentDocument>("comments");
     }
 
     /** document -> domain. Mongo's ObjectId becomes a plain string id so the
      *  domain stays storage-agnostic. */
-    #toDomain(doc) {
+    #toDomain(doc: CommentDocument): Comment {
         return new Comment({
             id: doc._id.toString(),
             content: doc.content,
@@ -43,7 +64,7 @@ class CommentRepository {
 
     /** domain -> document. Entities without an id (newly created comments or
      *  replies) get a fresh ObjectId here, since id generation is a Mongo concern. */
-    #toDocument(comment) {
+    #toDocument(comment: Comment): CommentDocument {
         return {
             _id: comment.id ? new ObjectId(comment.id) : new ObjectId(),
             content: comment.content,
@@ -61,14 +82,14 @@ class CommentRepository {
         };
     }
 
-    async findAll() {
+    async findAll(): Promise<Comment[]> {
         const docs = await this.collection.find().toArray();
         return docs.map(doc => this.#toDomain(doc));
     }
 
     /** Load the Comment aggregate that owns `id`, whether `id` is the comment's
      *  own id or the id of one of its embedded replies. Returns null if neither. */
-    async findAggregateContaining(id) {
+    async findAggregateContaining(id: string): Promise<Comment | null> {
         let doc = await this.collection.findOne({ _id: new ObjectId(id) });
         if (!doc) {
             doc = await this.collection.findOne({ "replies._id": new ObjectId(id) });
@@ -77,23 +98,24 @@ class CommentRepository {
     }
 
     /** Insert a brand-new comment and return it with its assigned id. */
-    async add(comment) {
+    async add(comment: Comment): Promise<Comment> {
         const doc = this.#toDocument(comment);
         await this.collection.insertOne(doc);
         return this.#toDomain(doc);
     }
 
     /** Persist the whole aggregate (the comment and all its replies). */
-    async save(comment) {
+    async save(comment: Comment): Promise<Comment> {
         const doc = this.#toDocument(comment);
         await this.collection.replaceOne({ _id: doc._id }, doc);
         return this.#toDomain(doc);
     }
 
     /** Delete a top-level comment (and its embedded replies) entirely. */
-    async removeComment(id) {
+    async removeComment(id: string): Promise<void> {
         await this.collection.deleteOne({ _id: new ObjectId(id) });
     }
 }
 
 export { CommentRepository };
+export type { CommentDocument, ReplyDocument };

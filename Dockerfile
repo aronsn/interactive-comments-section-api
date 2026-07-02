@@ -7,7 +7,7 @@
 #   - command runs nodemon, so saving a file restarts the server
 #
 # For a production image, swap `npm install` for `npm ci --omit=dev`, COPY
-# the source, and change CMD to ["node", "server.js"].
+# the source, run `npm run build`, and change CMD to ["node", "build/app.js"].
 
 FROM node:22-alpine
 
@@ -20,4 +20,4 @@ RUN npm install
 
 EXPOSE 5050
 
-CMD ["npx", "nodemon", "server.js"]
+CMD ["npx", "nodemon", "--watch", ".", "--ext", "ts", "--exec", "tsx server.ts"]

@@ -7,10 +7,13 @@
  * for `.router` to mount the Express Router on a path.
  */
 
-import express from "express";
+import express, { type Router } from "express";
+import type { CommentController } from "./presentation.js";
 
 class CommentsRouter {
-    constructor(controller) {
+    readonly router: Router;
+
+    constructor(controller: CommentController) {
         this.router = express.Router();
         this.router.route("/")
             .get(controller.getComments)
