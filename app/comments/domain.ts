@@ -11,16 +11,52 @@
  * used to live here (`fromDocument`) now lives in the repository instead.
  */
 
-class NotOwnerError extends Error {
-    constructor(owner) {
-        super(`This user is not the owner. "${owner}" is the owner of this document.`);
-        this.name = "NotOwnerError";
-    }
-}
+import { NotOwnerError } from "./errors.js";
+
+type CommentId = string | null;
+
+type UserImage = {
+    png: string;
+    webp: string;
+};
+
+type User = {
+    username: string;
+    image: UserImage;
+};
+
+type ReplyInput = {
+    id: CommentId;
+    content: string;
+    createdAt: Date;
+    score: number;
+    replyingTo: string;
+    user: User;
+};
+
+type CommentInput = {
+    id: CommentId;
+    content: string;
+    createdAt: Date;
+    score: number;
+    user: User;
+    replies?: Reply[];
+};
+
+type CreateCommentInput = {
+    content: string;
+    username: string;
+};
+
+type AddReplyInput = {
+    content: string;
+    replyingTo: string;
+    username: string;
+};
 
 /** Build the author value for a comment/reply. The avatar paths are derived
  *  from the username, so the shape of a "user" is decided in one place. */
-function createUser(username) {
+function createUser(username: string): User {
     return {
         username,
         image: {
@@ -35,7 +71,14 @@ function createUser(username) {
  * aggregate root. You always reach a Reply *through* its parent Comment.
  */
 class Reply {
-    constructor({ id, content, createdAt, score, replyingTo, user }) {
+    id: CommentId;
+    content: string;
+    createdAt: Date;
+    score: number;
+    replyingTo: string;
+    user: User;
+
+    constructor({ id, content, createdAt, score, replyingTo, user }: ReplyInput) {
         this.id = id;
         this.content = content;
         this.createdAt = createdAt;
@@ -44,12 +87,12 @@ class Reply {
         this.user = user;
     }
 
-    isOwnedBy(username) {
+    isOwnedBy(username: string): boolean {
         return this.user.username === username;
     }
 
     /** The ownership rule lives HERE now, instead of being duplicated in controllers. */
-    editContent(newContent, username) {
+    editContent(newContent: string, username: string): void {
         if (!this.isOwnedBy(username)) {
             throw new NotOwnerError(this.user.username);
         }
@@ -57,7 +100,7 @@ class Reply {
     }
 
     /** like === true -> +1, like === false -> -1. */
-    applyVote(like) {
+    applyVote(like: boolean): void {
         this.score += like ? 1 : -1;
     }
 }
@@ -67,7 +110,14 @@ class Reply {
  * reply go through the comment. Outside code holds a Comment, never a bare Reply.
  */
 class Comment {
-    constructor({ id, content, createdAt, score, user, replies = [] }) {
+    id: CommentId;
+    content: string;
+    createdAt: Date;
+    score: number;
+    user: User;
+    replies: Reply[];
+
+    constructor({ id, content, createdAt, score, user, replies = [] }: CommentInput) {
         this.id = id;
         this.content = content;
         this.createdAt = createdAt;
@@ -77,7 +127,7 @@ class Comment {
     }
 
     /** Create a brand-new comment. `id` is null until the repository assigns one. */
-    static create({ content, username }) {
+    static create({ content, username }: CreateCommentInput): Comment {
         return new Comment({
             id: null,
             content,
@@ -88,23 +138,23 @@ class Comment {
         });
     }
 
-    isOwnedBy(username) {
+    isOwnedBy(username: string): boolean {
         return this.user.username === username;
     }
 
-    editContent(newContent, username) {
+    editContent(newContent: string, username: string): void {
         if (!this.isOwnedBy(username)) {
             throw new NotOwnerError(this.user.username);
         }
         this.content = newContent;
     }
 
-    applyVote(like) {
+    applyVote(like: boolean): void {
         this.score += like ? 1 : -1;
     }
 
     /** Add a reply to this aggregate. Goes THROUGH the root, never around it. */
-    addReply({ content, replyingTo, username }) {
+    addReply({ content, replyingTo, username }: AddReplyInput): Reply {
         const reply = new Reply({
             id: null,
             content,
@@ -117,20 +167,21 @@ class Comment {
         return reply;
     }
 
-    removeReply(id) {
+    removeReply(id: string): void {
         this.replies = this.replies.filter(reply => reply.id !== id);
     }
 
-    findReply(id) {
+    findReply(id: string): Reply | undefined {
         return this.replies.find(reply => reply.id === id);
     }
 
     /** Return the entity inside this aggregate with the given id: either the
      *  comment itself or one of its replies. Lets callers act on "the target"
      *  without caring whether it is a comment or a reply. */
-    target(id) {
+    target(id: string): Comment | Reply | undefined {
         return this.id === id ? this : this.findReply(id);
     }
 }
 
-export { Comment, Reply, NotOwnerError, createUser };
+export { Comment, Reply, createUser };
+export type { AddReplyInput, CommentId, CreateCommentInput, User, UserImage };
