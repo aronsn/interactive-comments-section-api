@@ -6,27 +6,28 @@
  * the app where the dependency chain is constructed -- every layer receives
  * its collaborator(s) via constructor (DI).
  *
- * `App` itself receives `db` from the composition root (server.ts); it does
- * not import `dbConnection.ts` directly. That keeps `App` agnostic about how
- * the database is set up (real Mongo, in-memory fake, etc.).
+ * `App` receives a `CommentRepositoryPort` from the composition root
+ * (server.ts); it does not import `CommentRepository` or `dbConnection.ts`
+ * directly. That keeps `App` agnostic about how comments are stored -- real
+ * Mongo in production, an in-memory fake in tests -- since it only ever sees
+ * the port, never the concrete adapter.
  */
 
 import cors from "cors";
 import express, { type Express } from "express";
 import type { Server } from "node:http";
-import type { Db } from "mongodb";
-import { CommentRepository } from "./comments/repository.js";
 import { CommentService } from "./comments/application.js";
+import type { CommentRepositoryPort } from "./comments/application.js";
 import { CommentController } from "./comments/presentation.js";
 import { CommentsRouter } from "./comments/routes.js";
 
 class App {
     readonly express: Express;
 
-    constructor(db: Db) {
+    constructor(repository: CommentRepositoryPort) {
         this.express = express();
         this.#configureMiddleware();
-        this.#mountRoutes(db);
+        this.#mountRoutes(repository);
     }
 
     #configureMiddleware(): void {
@@ -34,8 +35,7 @@ class App {
         this.express.use(express.json());
     }
 
-    #mountRoutes(db: Db): void {
-        const repository = new CommentRepository(db);
+    #mountRoutes(repository: CommentRepositoryPort): void {
         const service = new CommentService(repository);
         const controller = new CommentController(service);
         const commentsRouter = new CommentsRouter(controller);
