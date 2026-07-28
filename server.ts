@@ -10,11 +10,13 @@
 
 import { App } from "./app/index.js";
 import { CommentRepository } from "./app/comments/repository.js";
+import { UserRepository } from "./app/users/repository.js";
 import { DatabaseClient } from "./db/dbConnection.js";
 
 const PORT = Number(process.env.PORT || 5050);
 
 const dbClient = await new DatabaseClient().connect();
-const repository = new CommentRepository(dbClient.db);
-const app = new App(repository);
+const commentsRepository = new CommentRepository(dbClient.db);
+const usersRepository = new UserRepository(dbClient.db);
+const app = new App(commentsRepository, usersRepository);
 app.listen(PORT);
