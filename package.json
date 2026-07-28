@@ -25,14 +25,17 @@
   },
   "homepage": "https://github.com/aronsn/interactive-comments-section-api#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "2.8.5",
     "dotenv": "16.4.5",
     "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "6.5.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.0.1",
     "@types/supertest": "^7.2.0",
     "esbuild": "^0.28.1",
