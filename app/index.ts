@@ -20,28 +20,41 @@ import { CommentService } from "./comments/application.js";
 import type { CommentRepositoryPort } from "./comments/application.js";
 import { CommentController } from "./comments/presentation.js";
 import { CommentsRouter } from "./comments/routes.js";
+import { UserService } from "./users/application.js";
+import type { UserRepositoryPort } from "./users/application.js";
+import { UserController } from "./users/presentation.js";
+import { UsersRouter } from "./users/routes.js";
 
 class App {
     readonly express: Express;
 
-    constructor(repository: CommentRepositoryPort) {
+    constructor(commentsRepository: CommentRepositoryPort, usersRepository: UserRepositoryPort ) {
         this.express = express();
         this.#configureMiddleware();
-        this.#mountRoutes(repository);
+        this.#mountComments(commentsRepository);
+        this.#mountUsers(usersRepository);
     }
 
     #configureMiddleware(): void {
         this.express.use(cors({ origin: process.env.FRONTEND_URL }));
         this.express.use(express.json());
     }
+    #mountUsers(repository: UserRepositoryPort): void {
+        const service = new UserService(repository);
+        const controller = new UserController(service);
+        const userRouter = new UsersRouter(controller);
+        this.express.use("/api/auth", userRouter.router);
+    }
 
-    #mountRoutes(repository: CommentRepositoryPort): void {
+    #mountComments(repository: CommentRepositoryPort): void {
         const service = new CommentService(repository);
         const controller = new CommentController(service);
         const commentsRouter = new CommentsRouter(controller);
         this.express.use("/api/comments", commentsRouter.router);
     }
 
+
+   
     listen(port: number): Server {
         return this.express.listen(port, () => {
             console.log(`Server listening on port ${port}`);
