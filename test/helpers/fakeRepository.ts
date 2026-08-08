@@ -1,17 +1,24 @@
 /**
- * In-memory CommentRepositoryPort for tests.
+ * In-memory repository ports for tests.
  *
  * Because the application layer depends on the PORT and not on the concrete
- * Mongo repository, this fake is a drop-in substitute: the service can't tell
- * the difference. It mirrors the two behaviours the real repository adds on
- * top of storage -- assigning an id to a brand-new comment, and assigning ids
- * to newly-added replies on save -- so use cases behave identically without a
- * database. Ids are 24-char hex strings so they pass the controller's id check.
+ * Mongo repository, these fakes are drop-in substitutes: a service can't tell
+ * the difference. Each mirrors the behaviour the real repository adds on top of
+ * storage, so use cases behave identically without a database.
  */
 
 import { Comment } from "../../app/comments/domain.js";
 import type { CommentRepositoryPort } from "../../app/comments/application.js";
+import { User } from "../../app/users/domain.js";
+import type { UserRepositoryPort } from "../../app/users/application.js";
+import { NotFoundError } from "../../app/users/errors.js";
 
+/**
+ * Mirrors the two behaviours the real comment repository adds on top of
+ * storage -- assigning an id to a brand-new comment, and assigning ids to newly
+ * added replies on save. Ids are 24-char hex strings so they pass the
+ * controller's id check.
+ */
 class FakeCommentRepository implements CommentRepositoryPort {
     #comments = new Map<string, Comment>();
     #seq = 0;
@@ -53,4 +60,24 @@ class FakeCommentRepository implements CommentRepositoryPort {
     }
 }
 
-export { FakeCommentRepository };
+/**
+ * Seeded with whatever users a test needs. Like the Mongo adapter, it signals
+ * "no such user" by THROWING `NotFoundError` rather than returning null -- if
+ * it returned null instead, `AuthService.#findOrNull` would never exercise its
+ * error-conversion path and the test would prove nothing about it.
+ */
+class FakeUserRepository implements UserRepositoryPort {
+    #users = new Map<string, User>();
+
+    constructor(users: User[] = []) {
+        for (const user of users) this.#users.set(user.username, user);
+    }
+
+    async findByUsername(username: string): Promise<User> {
+        const user = this.#users.get(username);
+        if (!user) throw new NotFoundError(username);
+        return user;
+    }
+}
+
+export { FakeCommentRepository, FakeUserRepository };
