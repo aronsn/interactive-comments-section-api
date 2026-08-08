@@ -31,7 +31,7 @@ async function makeUser(username: string, password: string, id = "00000000000000
         id,
         username,
         passwordHash: await testPasswordHasher.hash(password),
-        userImage: { png: `./images/avatars/image-${username}.png`, webp: `./images/avatars/image-${username}.webp` },
+        userImage: { png: `/avatars/image-${username}.png`, webp: `/avatars/image-${username}.webp` },
     });
 }
 
