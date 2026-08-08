@@ -1,35 +1,30 @@
 /**
  * Application layer for the users feature.
  *
- * `UserService` groups the use cases around the User account Entity. Like the
- * comments service, it depends only on a port (`UserRepositoryPort`) -- so it
- * is testable with an in-memory fake and knows nothing about MongoDB. The
- * concrete `UserRepository` implements this port and is injected via the
- * constructor from the composition root.
+ * Right now this file declares only the port -- there are no user use cases
+ * yet. Logging in reads users but belongs to the auth feature (it produces a
+ * session, not a user), so it lives in `app/auth/application.ts`. A
+ * `UserService` will appear here when the first use case that WRITES a user
+ * does: registration, profile edits, password changes.
+ *
+ * That is also the split to keep as this grows: auth reads user records,
+ * the users module creates and mutates them. Neither service should call the
+ * other -- both depend on this port directly.
  */
 
-import { User } from "./domain.js";
+import type { User } from "./domain.js";
 
 /**
- * The port this layer depends on. Declared HERE, next to its only consumer,
- * so the dependency points inward: the repository imports this, never the
- * other way around.
+ * The port for user persistence. Declared in the application layer, next to
+ * the use cases that will consume it, so the dependency points inward:
+ * `UserRepository` imports this to implement it, never the other way around.
+ *
+ * `AuthService` imports it too. A port having more than one consumer is
+ * normal -- what matters is that the adapter depends on the interface, not
+ * that exactly one caller uses it.
  */
 interface UserRepositoryPort {
     findByUsername(username: string): Promise<User>;
 }
 
-class UserService {
-    private readonly repository: UserRepositoryPort;
-
-    constructor(repository: UserRepositoryPort) {
-        this.repository = repository;
-    }
-
-    findUser(username: string): Promise<User> {
-        return this.repository.findByUsername(username);
-    }
-}
-
-export { UserService };
 export type { UserRepositoryPort };
