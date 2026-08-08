@@ -8,7 +8,7 @@
     "dev": "npm run db:start && npx nodemon --watch . --ext ts --exec \"tsx --env-file=config.env server.ts\"",
     "build": "tsc && esbuild build/server.js --bundle --minify --format=esm --platform=node --outfile=build/app.js",
     "start": "node build/app.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.test.json",
     "test": "node --import tsx --test \"test/**/*.test.ts\"",
     "db:start": "sudo systemctl start mongod",
     "db:stop": "sudo systemctl stop mongod",
