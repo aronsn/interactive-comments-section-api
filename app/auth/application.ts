@@ -11,14 +11,14 @@
  * or throws. Mapping that to status codes is `presentation.ts`'s job.
  */
 
-import type { User } from "../users/domain.js";
+import { normalizeEmail, type User } from "../users/domain.js";
 import type { UserRepositoryPort } from "../users/application.js";
 import { NotFoundError } from "../users/errors.js";
 import { InvalidCredentialsError } from "./errors.js";
 import type { PasswordHasherPort, TokenServicePort } from "./ports.js";
 
 type LoginInput = {
-    username: string;
+    email: string;
     password: string;
 };
 
@@ -43,12 +43,17 @@ class AuthService {
     /**
      * Verify credentials and issue a token.
      *
-     * Both failure modes -- no such user, wrong password -- raise the SAME
+     * Both failure modes -- no such account, wrong password -- raise the SAME
      * error, and both take the same amount of time (see #decoyHash). An
-     * attacker learns nothing about which usernames are real.
+     * attacker learns nothing about which emails are registered.
+     *
+     * The address is normalized with the same function `User.create` uses, so
+     * "Bob@Example.com" finds the account stored as "bob@example.com".
      */
-    async login({ username, password }: LoginInput): Promise<string> {
-        const user = await this.#findOrNull(username);
+    async login({ email, password }: LoginInput): Promise<string> {
+        const normalizedEmail = normalizeEmail(email);
+
+        const user = await this.#findOrNull(normalizedEmail);
         const hash = user?.passwordHash ?? (await this.#decoyHash());
         const passwordMatches = await this.passwordHasher.verify(password, hash);
 
@@ -56,7 +61,7 @@ class AuthService {
 
         // A user loaded from storage always has an id; a null one is a bug in
         // the repository, not a credential problem, so it must not become a 401.
-        if (!user.id) throw new Error(`User "${username}" was loaded without an id`);
+        if (!user.id) throw new Error(`User "${normalizedEmail}" was loaded without an id`);
 
         return this.tokenService.sign({ userId: user.id });
     }
@@ -66,9 +71,9 @@ class AuthService {
      * error but one of two ordinary outcomes, so it is converted to null and
      * `login` decides what it means.
      */
-    async #findOrNull(username: string): Promise<User | null> {
+    async #findOrNull(email: string): Promise<User | null> {
         try {
-            return await this.users.findByUsername(username);
+            return await this.users.findByEmail(email);
         } catch (error) {
             if (error instanceof NotFoundError) return null;
             throw error;
@@ -76,16 +81,16 @@ class AuthService {
     }
 
     /**
-     * A throwaway hash to compare against when the username doesn't exist.
+     * A throwaway hash to compare against when the account doesn't exist.
      *
-     * Without it, an unknown username returns immediately while a known one
+     * Without it, an unknown email returns immediately while a known one
      * costs a ~200ms bcrypt comparison -- and that timing difference is itself
      * a way to enumerate accounts. Hashing through the injected hasher (rather
      * than hardcoding a literal) keeps the decoy at whatever cost factor this
      * deployment is configured for. Computed once, then reused.
      */
     #decoyHash(): Promise<string> {
-        this.#decoy ??= this.passwordHasher.hash("no-user-with-this-name");
+        this.#decoy ??= this.passwordHasher.hash("no-account-with-this-email");
         return this.#decoy;
     }
 }

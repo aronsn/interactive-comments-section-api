@@ -20,7 +20,7 @@ import type { Request, Response } from "express";
 import type { AuthService } from "./application.js";
 import { InvalidCredentialsError } from "./errors.js";
 
-const LOGIN_PROPERTIES = ["username", "password"];
+const LOGIN_PROPERTIES = ["email", "password"];
 
 class AuthController {
     private readonly service: AuthService;
@@ -35,12 +35,12 @@ class AuthController {
                 return response.status(400).send("Content-Type is not correctly set and must be of 'application/json'");
             }
 
-            const { username, password } = request.body as Record<string, unknown>;
+            const { email, password } = request.body as Record<string, unknown>;
 
-            if (username === "" || username === undefined || password === "" || password === undefined) {
+            if (email === "" || email === undefined || password === "" || password === undefined) {
                 return response.status(400).send("Request is malformed or invalid. The body is missing properties");
             }
-            if (typeof username !== "string" || typeof password !== "string") {
+            if (typeof email !== "string" || typeof password !== "string") {
                 return response.status(400).send("Request is malformed or invalid. Check if the data types of the properties provided are correct");
             }
             for (const property in request.body) {
@@ -49,7 +49,7 @@ class AuthController {
                 }
             }
 
-            const token = await this.service.login({ username, password });
+            const token = await this.service.login({ email, password });
             return response.status(200).send({ token });
         } catch (error) {
             return this.#sendError(response, error, "Error: Unable to login.");
@@ -64,7 +64,7 @@ class AuthController {
      *
      * Unlike the comments controller, the 500 branch does NOT echo the error
      * message back to the client: on an auth route an internal message can
-     * disclose which username was looked up. It is logged instead.
+     * disclose which email was looked up. It is logged instead.
      */
     #sendError(response: Response, error: unknown, fallback: string): Response {
         console.error(`\n${error}`);
