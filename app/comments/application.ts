@@ -145,5 +145,5 @@ export type {
     PostCommentInput,
     PostReplyInput,
     RemoveCommentInput,
-    VoteInput,
+    VoteInput
 };

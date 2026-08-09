@@ -1,0 +1,122 @@
+/**
+ * HTTP integration tests for login: the whole auth stack minus the database.
+ *
+ * The App is built with a FakeUserRepository injected at the test suite's
+ * composition root, exactly the way server.ts injects the real one -- so one
+ * test drives request validation (presentation), credential checking
+ * (application), the real bcrypt adapter and the real JWT adapter in a single
+ * pass, with no Mongo and no network listener.
+ *
+ * The password hasher is real, just configured at cost 4 instead of 12. Faking
+ * it would be faster still, but then nothing would prove that a hash produced
+ * by `hash` is actually accepted by `verify`.
+ */
+
+import { test, describe, before } from "node:test";
+import assert from "node:assert/strict";
+import { buildTestApp, makeUser, testTokenService } from "../helpers/testApp.js";
+import { User } from "../../app/users/domain.js";
+
+const USERNAME = "amyrobson";
+const EMAIL = "amyrobson@example.com";
+const PASSWORD = "correct-horse-battery-staple";
+const USER_ID = "000000000000000000000001";
+
+let api: ReturnType<typeof buildTestApp>;
+let user: User;
+
+// `before`, not `beforeEach`: hashing is the slow part and nothing here mutates
+// the repository, so one seeded user is enough for the whole file.
+before(async () => {
+    user = await makeUser(USERNAME, PASSWORD, USER_ID, EMAIL);
+    api = buildTestApp([user]);
+});
+
+function login(body: unknown) {
+    return api.post("/api/auth/login").send(body as object);
+}
+
+describe("POST /api/auth/login", () => {
+    test("returns 200 and a token for correct credentials", async () => {
+        const response = await login({ email: EMAIL, password: PASSWORD }).expect(200);
+
+        assert.equal(typeof response.body.token, "string");
+        assert.ok(response.body.token.length > 0);
+    });
+
+    test("issues a token carrying the user's id as the subject", async () => {
+        const response = await login({ email: EMAIL, password: PASSWORD }).expect(200);
+
+        const principal = testTokenService.verify(response.body.token);
+        assert.equal(principal.userId, USER_ID);
+    });
+
+    /* An address typed with different capitalisation is the SAME account.
+       Both `User.create` and `login` run it through `normalizeEmail`. */
+    test("accepts the email in any capitalisation", async () => {
+        await login({ email: "AmyRobson@Example.COM", password: PASSWORD }).expect(200);
+    });
+
+    test("accepts the email with surrounding whitespace", async () => {
+        await login({ email: `  ${EMAIL}  `, password: PASSWORD }).expect(200);
+    });
+
+    test("never puts the password hash in the response", async () => {
+        const response = await login({ email: EMAIL, password: PASSWORD }).expect(200);
+
+        assert.deepEqual(Object.keys(response.body), ["token"]);
+        assert.ok(!JSON.stringify(response.body).includes(user.passwordHash));
+    });
+
+    test("returns 401 for a wrong password", async () => {
+        await login({ email: EMAIL, password: "wrong" }).expect(401);
+    });
+
+    test("returns 401 for an unknown email", async () => {
+        await login({ email: "nobody@example.com", password: PASSWORD }).expect(401);
+    });
+
+    /* The username is no longer a credential -- only the email is. */
+    test("returns 401 when the username is sent as the email", async () => {
+        await login({ email: USERNAME, password: PASSWORD }).expect(401);
+    });
+
+    /* The point of the whole InvalidCredentialsError design: an attacker must
+       not be able to tell "that account exists" from "that one does not". */
+    test("gives an identical response for a wrong password and an unknown email", async () => {
+        const wrongPassword = await login({ email: EMAIL, password: "wrong" });
+        const unknownUser = await login({ email: "nobody@example.com", password: PASSWORD });
+
+        assert.equal(wrongPassword.status, unknownUser.status);
+        assert.equal(wrongPassword.text, unknownUser.text);
+        assert.ok(!unknownUser.text.includes("nobody@example.com"));
+    });
+
+    test("returns 400 when the password is missing", async () => {
+        await login({ email: EMAIL }).expect(400);
+    });
+
+    test("returns 400 when the email is missing", async () => {
+        await login({ password: PASSWORD }).expect(400);
+    });
+
+    test("returns 400 when a field is empty", async () => {
+        await login({ email: EMAIL, password: "" }).expect(400);
+    });
+
+    test("returns 400 when a field is the wrong type", async () => {
+        await login({ email: EMAIL, password: 12345 }).expect(400);
+    });
+
+    test("returns 400 for an unrecognised property", async () => {
+        await login({ email: EMAIL, password: PASSWORD, admin: true }).expect(400);
+    });
+
+    test("returns 400 when Content-Type is not JSON", async () => {
+        await api
+            .post("/api/auth/login")
+            .set("Content-Type", "text/plain")
+            .send(`{"email":"${EMAIL}","password":"${PASSWORD}"}`)
+            .expect(400);
+    });
+});

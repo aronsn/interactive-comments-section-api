@@ -14,10 +14,17 @@ services:
     build: .
     ports:
       - "127.0.0.1:5050:5050"
+    # The container's CMD runs plain `tsx server.ts` (no --env-file, unlike
+    # `npm run dev`), so Compose is what loads config.env here. Anything the
+    # app reads from process.env -- JWT_SECRET, JWT_TTL, BCRYPT_COST -- comes
+    # in through this, and a new variable needs no change to this file.
+    env_file:
+      - config.env
     environment:
-      # Inside the docker network, mongo is reachable at the service name.
-      # This OVERRIDES the value in config.env (which uses localhost for the
-      # `npm run dev` case where the app runs on the host).
+      # `environment` wins over `env_file`, so these override config.env.
+      # Inside the docker network, mongo is reachable at the service name
+      # (config.env uses localhost, for the `npm run dev` case where the app
+      # runs on the host).
       MONGODB_URI: mongodb://mongo:27017
       PORT: 5050
       FRONTEND_URL: ${FRONTEND_URL:-}

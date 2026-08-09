@@ -1,16 +1,22 @@
 /**
  * Express application wrapper.
  *
- * `App` is built from a `db` handle and wires the comments feature top-down:
- * repository -> service -> controller -> router. This is the only place in
- * the app where the dependency chain is constructed -- every layer receives
- * its collaborator(s) via constructor (DI).
+ * `App` receives its adapters from the composition root (server.ts) and wires
+ * each feature top-down: service -> controller -> router. It constructs the
+ * services and controllers itself because there is only ever one of those and
+ * nothing about them varies between environments. It refuses to construct the
+ * things that DO vary -- repositories, the password hasher, the token service
+ * -- and demands them through the constructor instead. That is the line
+ * between "composition that can live here" and "composition that belongs in
+ * the root".
  *
- * `App` receives a `CommentRepositoryPort` from the composition root
- * (server.ts); it does not import `CommentRepository` or `dbConnection.ts`
- * directly. That keeps `App` agnostic about how comments are stored -- real
- * Mongo in production, an in-memory fake in tests -- since it only ever sees
- * the port, never the concrete adapter.
+ * Because it only ever sees ports, `App` is agnostic about how anything is
+ * implemented: real Mongo and bcrypt in production, in-memory fakes and a
+ * cheap cost factor in tests.
+ *
+ * Dependencies arrive as a named object rather than positional arguments:
+ * with four collaborators, `new App(a, b, c, d)` is easy to get wrong at a
+ * call site and gives no hint what each slot means.
  */
 
 import cors from "cors";
@@ -20,14 +26,31 @@ import { CommentService } from "./comments/application.js";
 import type { CommentRepositoryPort } from "./comments/application.js";
 import { CommentController } from "./comments/presentation.js";
 import { CommentsRouter } from "./comments/routes.js";
+import { AuthService } from "./auth/application.js";
+import { AuthController } from "./auth/presentation.js";
+import { AuthRouter } from "./auth/routes.js";
+import type { PasswordHasherPort, TokenServicePort } from "./auth/ports.js";
+import { UserService } from "./users/application.js";
+import type { UserRepositoryPort } from "./users/application.js";
+import { UserController } from "./users/presentation.js";
+import { UsersRouter } from "./users/routes.js";
+
+type AppDependencies = {
+    commentsRepository: CommentRepositoryPort;
+    usersRepository: UserRepositoryPort;
+    passwordHasher: PasswordHasherPort;
+    tokenService: TokenServicePort;
+};
 
 class App {
     readonly express: Express;
 
-    constructor(repository: CommentRepositoryPort) {
+    constructor(dependencies: AppDependencies) {
         this.express = express();
         this.#configureMiddleware();
-        this.#mountRoutes(repository);
+        this.#mountComments(dependencies);
+        this.#mountUsers(dependencies);
+        this.#mountAuth(dependencies);
     }
 
     #configureMiddleware(): void {
@@ -35,11 +58,25 @@ class App {
         this.express.use(express.json());
     }
 
-    #mountRoutes(repository: CommentRepositoryPort): void {
-        const service = new CommentService(repository);
+    #mountUsers({ usersRepository, passwordHasher }: AppDependencies): void {
+        const service = new UserService(usersRepository, passwordHasher);
+        const controller = new UserController(service);
+        const router = new UsersRouter(controller);
+        this.express.use("/api/users", router.router);
+    }
+
+    #mountAuth({ usersRepository, passwordHasher, tokenService }: AppDependencies): void {
+        const service = new AuthService(usersRepository, passwordHasher, tokenService);
+        const controller = new AuthController(service);
+        const router = new AuthRouter(controller);
+        this.express.use("/api/auth", router.router);
+    }
+
+    #mountComments({ commentsRepository }: AppDependencies): void {
+        const service = new CommentService(commentsRepository);
         const controller = new CommentController(service);
-        const commentsRouter = new CommentsRouter(controller);
-        this.express.use("/api/comments", commentsRouter.router);
+        const router = new CommentsRouter(controller);
+        this.express.use("/api/comments", router.router);
     }
 
     listen(port: number): Server {
@@ -50,3 +87,4 @@ class App {
 }
 
 export { App };
+export type { AppDependencies };
