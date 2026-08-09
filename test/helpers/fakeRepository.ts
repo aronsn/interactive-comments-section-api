@@ -11,7 +11,7 @@ import { Comment } from "../../app/comments/domain.js";
 import type { CommentRepositoryPort } from "../../app/comments/application.js";
 import { User } from "../../app/users/domain.js";
 import type { UserRepositoryPort } from "../../app/users/application.js";
-import { NotFoundError } from "../../app/users/errors.js";
+import { EmailTakenError, NotFoundError, UsernameTakenError } from "../../app/users/errors.js";
 
 /**
  * Mirrors the two behaviours the real comment repository adds on top of
@@ -67,15 +67,38 @@ class FakeCommentRepository implements CommentRepositoryPort {
  * error-conversion path and the test would prove nothing about it.
  */
 class FakeUserRepository implements UserRepositoryPort {
+    /** Keyed by email, the identifier callers log in with. */
     #users = new Map<string, User>();
+    #seq = 0;
 
     constructor(users: User[] = []) {
-        for (const user of users) this.#users.set(user.username, user);
+        for (const user of users) this.#users.set(user.email, user);
     }
 
-    async findByUsername(username: string): Promise<User> {
-        const user = this.#users.get(username);
-        if (!user) throw new NotFoundError(username);
+    #nextId(): string {
+        this.#seq += 1;
+        return this.#seq.toString(16).padStart(24, "0");
+    }
+
+    async findByEmail(email: string): Promise<User> {
+        const user = this.#users.get(email);
+        if (!user) throw new NotFoundError(email);
+        return user;
+    }
+
+    /**
+     * Stands in for the two unique indexes: the real repository lets Mongo
+     * reject the duplicate and converts error 11000 into these same domain
+     * errors, reading `keyPattern` to tell which field collided.
+     */
+    async add(user: User): Promise<User> {
+        if (this.#users.has(user.email)) throw new EmailTakenError(user.email);
+        for (const existing of this.#users.values()) {
+            if (existing.username === user.username) throw new UsernameTakenError(user.username);
+        }
+
+        user.id = this.#nextId();
+        this.#users.set(user.email, user);
         return user;
     }
 }

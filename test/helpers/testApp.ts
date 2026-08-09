@@ -26,10 +26,16 @@ const testPasswordHasher = new BcryptPasswordHasher(TEST_BCRYPT_COST);
 const testTokenService = new JSONWebToken(TEST_JWT_SECRET, TEST_JWT_TTL);
 
 /** Build a User whose passwordHash is a real bcrypt hash of `password`. */
-async function makeUser(username: string, password: string, id = "000000000000000000000001"): Promise<User> {
+async function makeUser(
+    username: string,
+    password: string,
+    id = "000000000000000000000001",
+    email = `${username}@example.com`,
+): Promise<User> {
     return new User({
         id,
         username,
+        email,
         passwordHash: await testPasswordHasher.hash(password),
         userImage: { png: `/avatars/image-${username}.png`, webp: `/avatars/image-${username}.webp` },
     });
