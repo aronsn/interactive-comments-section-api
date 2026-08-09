@@ -30,3 +30,6 @@ build/
 
 .DS_Store
 .prettierignore
+
+# Throwaway dev seed script -- not part of the project
+db/seed.ts

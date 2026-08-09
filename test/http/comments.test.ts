@@ -10,14 +10,12 @@
 
 import { test, describe, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import request from "supertest";
-import { App } from "../../app/index.js";
-import { FakeCommentRepository } from "../helpers/fakeRepository.js";
+import { buildTestApp } from "../helpers/testApp.js";
 
-let api: request.SuperTest<request.Test>;
+let api: ReturnType<typeof buildTestApp>;
 
 beforeEach(() => {
-    api = request(new App(new FakeCommentRepository()).express);
+    api = buildTestApp();
 });
 
 async function createComment(content = "first!", username = "amyrobson") {
