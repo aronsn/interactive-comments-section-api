@@ -30,7 +30,10 @@ import { AuthService } from "./auth/application.js";
 import { AuthController } from "./auth/presentation.js";
 import { AuthRouter } from "./auth/routes.js";
 import type { PasswordHasherPort, TokenServicePort } from "./auth/ports.js";
+import { UserService } from "./users/application.js";
 import type { UserRepositoryPort } from "./users/application.js";
+import { UserController } from "./users/presentation.js";
+import { UsersRouter } from "./users/routes.js";
 
 type AppDependencies = {
     commentsRepository: CommentRepositoryPort;
@@ -46,12 +49,20 @@ class App {
         this.express = express();
         this.#configureMiddleware();
         this.#mountComments(dependencies);
+        this.#mountUsers(dependencies);
         this.#mountAuth(dependencies);
     }
 
     #configureMiddleware(): void {
         this.express.use(cors({ origin: process.env.FRONTEND_URL }));
         this.express.use(express.json());
+    }
+
+    #mountUsers({ usersRepository, passwordHasher }: AppDependencies): void {
+        const service = new UserService(usersRepository, passwordHasher);
+        const controller = new UserController(service);
+        const router = new UsersRouter(controller);
+        this.express.use("/api/users", router.router);
     }
 
     #mountAuth({ usersRepository, passwordHasher, tokenService }: AppDependencies): void {
