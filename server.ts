@@ -49,9 +49,14 @@ const BCRYPT_COST = Number(process.env.BCRYPT_COST || 12);
 
 const dbClient = await new DatabaseClient().connect();
 
+// The unique index on users.username is what makes registration safe against
+// two simultaneous signups for the same name, so declare it before serving.
+const usersRepository = new UserRepository(dbClient.db);
+await usersRepository.ensureIndexes();
+
 const app = new App({
     commentsRepository: new CommentRepository(dbClient.db),
-    usersRepository: new UserRepository(dbClient.db),
+    usersRepository,
     passwordHasher: new BcryptPasswordHasher(BCRYPT_COST),
     tokenService: new JSONWebToken(requireEnv("JWT_SECRET"), process.env.JWT_TTL ?? "1h"),
 });
